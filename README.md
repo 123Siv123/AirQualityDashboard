@@ -198,9 +198,7 @@ Add screenshots here:
 
 ![Alerts](screenshots/alerts.png)
 
-### Mobile View
 
-![Mobile](screenshots/mobile.png)
 
 ---
 
