@@ -182,22 +182,11 @@ You can install the application to your phone using:
 
 ---
 
-## 📸 Screenshots
+![Dashboard](scripts/screenshots/dashboard.png)
 
-Add screenshots here:
+![Analytics](scripts/screenshots/analytics.png)
 
-### Dashboard
-
-![Dashboard](screenshots/dashboard.png)
-
-### Analytics
-
-![Analytics](screenshots/analytics.png)
-
-### Alerts
-
-![Alerts](screenshots/alerts.png)
-
+![Alerts](scripts/screenshots/alerts.png)
 
 
 ---
