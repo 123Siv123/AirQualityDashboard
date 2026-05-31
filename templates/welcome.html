@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Smart Air Quality System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    {% include 'includes/pwa_head.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=15">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=4">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-pwa.css') }}?v=1">
+</head>
+
+<body class="welcome-landing">
+
+    <div class="welcome-page">
+        <div class="overlay"></div>
+
+        <div class="welcome-content">
+
+            <div class="system-badge">
+                ● INDUSTRIAL MONITORING ACTIVE
+            </div>
+
+            <h1>
+                SMART AIR QUALITY
+                <br>
+                MONITORING SYSTEM
+            </h1>
+
+            <p>
+                Real-Time Environmental Intelligence
+                powered by IoT Sensor Analytics
+            </p>
+
+            <a href="{{ url_for('login') }}" class="enter-btn-link">
+                <button type="button" class="enter-btn">ENTER SYSTEM</button>
+            </a>
+
+        </div>
+    </div>
+
+    {% include 'includes/pwa_install_bar.html' %}
+    <script src="{{ url_for('static', filename='js/pwa-install.js') }}?v=1"></script>
+</body>
+
+</html>

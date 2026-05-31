@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Alert Monitoring Center</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    {% include 'includes/pwa_head.html' %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=14">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-pwa.css') }}?v=1">
+
+</head>
+
+<body class="app-shell alerts-page">
+
+    {% set active_page = 'alerts' %}
+    {% set logo_text = 'AQ ALERTS' %}
+    {% set show_clock = true %}
+    {% set nav_extra_class = 'alerts-navbar' %}
+    {% include 'includes/app_nav.html' %}
+
+    <div class="app-content alerts-main">
+
+    <section class="alert-hero">
+
+        <div class="alert-badge alert-badge-pulse" id="liveBadge">
+            ● LIVE ALERT SYSTEM ACTIVE
+        </div>
+
+        <h1>🚨 ALERT MONITORING CENTER</h1>
+
+        <p>
+            Real-time environmental threat detection
+            · Gas <strong id="liveGas">{{ data.gas }}</strong>
+            · AQI <strong id="liveStatus">{{ data.status }}</strong>
+        </p>
+        <p class="stream-sync-line" id="streamSyncLine">Syncing live feed…</p>
+
+        <button type="button" class="export-btn" id="exportBtn">
+            Download Alert Report
+        </button>
+
+        <div class="sound-unlock-bar" id="soundUnlockBar">
+            <p id="soundUnlockText">Enable beep + warning voice for smoke</p>
+            <button type="button" class="sound-enable-btn" id="enableSoundBtn">
+                Enable Smoke Alerts
+            </button>
+        </div>
+
+    </section>
+
+    <section class="sensor-health-section">
+
+        <div class="sensor-health-card" id="gasHealth">
+            <h3>Gas Sensor</h3>
+            <p>→ {{ sensors.gas }}</p>
+        </div>
+
+        <div class="sensor-health-card" id="aqiHealth">
+            <h3>AQI Sensor</h3>
+            <p>→ {{ sensors.aqi }}</p>
+        </div>
+
+        <div class="sensor-health-card" id="smokeHealth">
+            <h3>Smoke Detector</h3>
+            <p>→ {{ sensors.smoke }}</p>
+        </div>
+
+    </section>
+
+    <section class="alert-summary" id="alertSummary">
+
+        <div class="alert-summary-card critical-card">
+            <h3>Critical Alerts</h3>
+            <p id="countCritical">{{ summary.critical }}</p>
+        </div>
+
+        <div class="alert-summary-card moderate-card">
+            <h3>Moderate Alerts</h3>
+            <p id="countModerate">{{ summary.moderate }}</p>
+        </div>
+
+        <div class="alert-summary-card safe-card">
+            <h3>Safe Status</h3>
+            <p id="countSafe">{{ summary.safe_percent }}%</p>
+        </div>
+
+        <div class="alert-summary-card time-card">
+            <h3>Last Alert</h3>
+            <p id="lastAlertTime">{{ summary.last_alert }}</p>
+            <span class="last-alert-clock" id="lastAlertClock">{{ summary.last_alert_clock }}</span>
+        </div>
+
+    </section>
+
+    <section class="alert-table-section">
+
+        <div class="alert-table-container">
+
+            <h2>🚨 LIVE ALERT LOGS</h2>
+
+            <table class="alert-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Sensor</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="alertTableBody">
+                    {% for log in logs %}
+                    <tr class="{% if log.is_live %}is-live-row{% endif %}">
+                        <td>{{ log.time }}</td>
+                        <td>{{ log.sensor }}</td>
+                        <td>
+                            <span class="{{ log.severity }}-badge">
+                                {{ log.severity|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ log.detail or log.status }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">Waiting for sensor events…</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+
+    </section>
+
+    <section class="critical-alert-section"
+             id="criticalBannerSection"
+             data-severity="{{ current_severity }}">
+
+        <div class="critical-alert-box {% if banner.flash %}critical-flash{% endif %}"
+             id="criticalBanner">
+
+            <div class="voice-alert-badge"
+                 id="voiceAlertBadge"
+                 {% if current_severity != 'critical' %}hidden{% endif %}>
+                🔊 LIVE VOICE ALERT
+            </div>
+
+            <h2 id="bannerTitle">{{ banner.title }}</h2>
+            <p id="bannerMessage">{{ banner.message }}</p>
+
+        </div>
+
+    </section>
+
+    <section class="safety-section" id="safetySection"
+             data-level="{{ current_severity }}">
+
+        <div class="safety-panel safety-panel--{{ current_severity }}" id="safetyPanel">
+
+            <div class="safety-header">
+                <div class="safety-header-copy">
+                    <span class="safety-kicker">Environmental Health Protocol</span>
+                    <h2>🛡 Safety Recommendations</h2>
+                    <p class="safety-headline" id="safetyHeadline">
+                        {{ safety.meta.headline }}
+                    </p>
+                    <p class="safety-summary" id="safetySummary">
+                        {{ safety.meta.summary }}
+                    </p>
+                </div>
+
+                <div class="safety-risk-badge" id="safetyRiskBadge">
+                    <span class="safety-risk-label">Risk Level</span>
+                    <strong id="safetyRiskLevel">{{ safety.meta.label }}</strong>
+                    <span class="safety-risk-hint" id="safetyRiskHint">
+                        Based on live sensor analysis
+                    </span>
+                </div>
+            </div>
+
+            <div class="safety-playbook-head">
+                <h3 id="safetyProtocolTitle">⚡ {{ safety.protocol_title }}</h3>
+                <p>Follow these steps in order — tailored to your current sensor readings</p>
+            </div>
+
+            <div class="safety-playbook" id="safetyPlaybook">
+                {% for action in safety.quick_actions %}
+                <article class="playbook-card playbook-card--{{ action.accent }}"
+                         style="--urgency: {{ action.urgency }}">
+                    <div class="playbook-card-accent"></div>
+                    <div class="playbook-card-top">
+                        <span class="playbook-step">{{ action.step }}</span>
+                        <span class="playbook-icon">{{ action.icon }}</span>
+                        <span class="playbook-urgency">{{ action.urgency }}%</span>
+                    </div>
+                    <h4 class="playbook-title">{{ action.title }}</h4>
+                    <p class="playbook-lead">{{ action.short_desc }}</p>
+                    <p class="playbook-detail">{{ action.detail }}</p>
+                    <footer class="playbook-footer">
+                        <span class="playbook-tag">{{ action.short_title }}</span>
+                        <span class="playbook-eta">⏱ {{ action.eta }}</span>
+                    </footer>
+                </article>
+                {% endfor %}
+            </div>
+
+            <div class="safety-footer-bar">
+                <div class="safety-footer-item">
+                    <span>🌡 Temperature</span>
+                    <strong id="safetyTemp">{{ data.temperature }}</strong>
+                </div>
+                <div class="safety-footer-item">
+                    <span>💧 Humidity</span>
+                    <strong id="safetyHumidity">{{ data.humidity }}</strong>
+                </div>
+                <div class="safety-footer-item">
+                    <span>☁ Gas Index</span>
+                    <strong id="safetyGas">{{ data.gas }}</strong>
+                </div>
+                <div class="safety-footer-item">
+                    <span>🚨 AQI Status</span>
+                    <strong id="safetyAqi">{{ data.status }}</strong>
+                </div>
+            </div>
+
+            <p class="safety-disclaimer">
+                Guidance is generated from real-time IoT telemetry. For medical emergencies or
+                persistent critical readings, contact local authorities and qualified safety personnel.
+            </p>
+
+        </div>
+
+    </section>
+
+    <footer class="app-footer">
+        <p><strong>AQ Monitor</strong> © 2026 · Real-Time Smart Air Quality Monitoring System</p>
+    </footer>
+
+    </div><!-- .app-content -->
+
+    <script src="{{ url_for('static', filename='js/air-alerts.js') }}?v=8"></script>
+
+    <script id="initialAlertData" type="application/json">{{ alert_json|safe }}</script>
+
+    <script>
+        let alertPayload = {};
+        let lastAlertIso = null;
+        let lastRefreshAt = 0;
+
+        function formatRelativeFromIso(isoString) {
+            if (!isoString) {
+                return "No sensor alerts yet";
+            }
+
+            const then = new Date(isoString).getTime();
+            if (Number.isNaN(then)) {
+                return "No sensor alerts yet";
+            }
+
+            const seconds = Math.floor((Date.now() - then) / 1000);
+
+            if (seconds < 5) {
+                return "Just now";
+            }
+            if (seconds < 60) {
+                return seconds + " sec ago";
+            }
+            if (seconds < 3600) {
+                const minutes = Math.floor(seconds / 60);
+                return minutes + " min" + (minutes === 1 ? "" : "s") + " ago";
+            }
+
+            const hours = Math.floor(seconds / 3600);
+            return hours + " hr" + (hours === 1 ? "" : "s") + " ago";
+        }
+
+        function updateLastAlertDisplay() {
+            const timeEl = document.getElementById("lastAlertTime");
+            const clockEl = document.getElementById("lastAlertClock");
+            if (!timeEl) {
+                return;
+            }
+
+            timeEl.textContent = formatRelativeFromIso(lastAlertIso);
+
+            if (clockEl && lastAlertIso) {
+                const date = new Date(lastAlertIso);
+                if (!Number.isNaN(date.getTime())) {
+                    clockEl.textContent = date.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    });
+                }
+            } else if (clockEl) {
+                clockEl.textContent = "--";
+            }
+        }
+
+        try {
+            alertPayload = JSON.parse(
+                document.getElementById("initialAlertData").textContent
+            );
+        } catch (error) {
+            alertPayload = {};
+        }
+
+        function pad(value) {
+            return String(value).padStart(2, "0");
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const hours = pad(now.getHours());
+            const minutes = pad(now.getMinutes());
+            const seconds = pad(now.getSeconds());
+            document.getElementById("clockTime").textContent =
+                hours + ":" + minutes + ":" + seconds;
+        }
+
+        function badgeClass(severity) {
+            if (severity === "critical") return "critical-badge";
+            if (severity === "moderate") return "moderate-badge";
+            return "safe-badge";
+        }
+
+        function renderTable(logs) {
+            const body = document.getElementById("alertTableBody");
+            if (!logs || logs.length === 0) {
+                body.innerHTML =
+                    '<tr><td colspan="4">Waiting for sensor events…</td></tr>';
+                return;
+            }
+
+            body.innerHTML = logs.map(function (log) {
+                const liveClass = log.is_live ? " is-live-row" : "";
+                const statusCell = log.detail || log.status || "--";
+                return (
+                    "<tr class=\"" + liveClass.trim() + "\">" +
+                    "<td>" + log.time + "</td>" +
+                    "<td>" + log.sensor + "</td>" +
+                    "<td><span class=\"" + badgeClass(log.severity) + "\">" +
+                    log.severity.charAt(0).toUpperCase() + log.severity.slice(1) +
+                    "</span></td>" +
+                    "<td>" + statusCell + "</td>" +
+                    "</tr>"
+                );
+            }).join("");
+        }
+
+        function updateStreamSync(payload) {
+            const el = document.getElementById("streamSyncLine");
+            if (!el) {
+                return;
+            }
+            const stream = payload.stream || {};
+            const age = stream.snapshot_age_sec;
+            const parts = ["Live feed"];
+            if (stream.serial_fresh) {
+                parts.push("serial");
+            } else if (stream.connected) {
+                parts.push("simulated");
+            } else {
+                parts.push("simulated");
+            }
+            if (typeof age === "number" && age <= 4) {
+                parts.push("· updated just now");
+            } else if (typeof age === "number") {
+                parts.push("· snapshot " + age + "s ago");
+            }
+            if (lastRefreshAt) {
+                parts.push("· polled " + formatRelativeFromIso(new Date(lastRefreshAt).toISOString()).toLowerCase());
+            }
+            el.textContent = parts.join(" ");
+        }
+
+        function renderSafety(safety, sensor) {
+            if (!safety || !safety.meta) {
+                return;
+            }
+
+            const panel = document.getElementById("safetyPanel");
+            const section = document.getElementById("safetySection");
+            const level = safety.meta.level || "safe";
+
+            panel.className = "safety-panel safety-panel--" + level;
+            section.setAttribute("data-level", level);
+
+            document.getElementById("safetyHeadline").textContent =
+                safety.meta.headline;
+            document.getElementById("safetySummary").textContent =
+                safety.meta.summary;
+            document.getElementById("safetyRiskLevel").textContent =
+                safety.meta.label;
+
+            if (sensor) {
+                document.getElementById("safetyTemp").textContent =
+                    sensor.temperature || "--";
+                document.getElementById("safetyHumidity").textContent =
+                    sensor.humidity || "--";
+                document.getElementById("safetyGas").textContent =
+                    sensor.gas || "--";
+                document.getElementById("safetyAqi").textContent =
+                    sensor.status || "--";
+            }
+
+            const protocolTitle = document.getElementById("safetyProtocolTitle");
+            if (protocolTitle && safety.protocol_title) {
+                protocolTitle.textContent = "⚡ " + safety.protocol_title;
+            }
+
+            const playbook = document.getElementById("safetyPlaybook");
+            if (!playbook) {
+                return;
+            }
+
+            playbook.innerHTML = (safety.quick_actions || []).map(function (action) {
+                const urgency = action.urgency || 50;
+                return (
+                    '<article class="playbook-card playbook-card--' + action.accent + '" ' +
+                    'style="--urgency:' + urgency + '">' +
+                    '<div class="playbook-card-accent"></div>' +
+                    '<div class="playbook-card-top">' +
+                    '<span class="playbook-step">' + action.step + '</span>' +
+                    '<span class="playbook-icon">' + action.icon + '</span>' +
+                    '<span class="playbook-urgency">' + urgency + '%</span>' +
+                    '</div>' +
+                    '<h4 class="playbook-title">' + action.title + '</h4>' +
+                    '<p class="playbook-lead">' + action.short_desc + '</p>' +
+                    '<p class="playbook-detail">' + action.detail + '</p>' +
+                    '<footer class="playbook-footer">' +
+                    '<span class="playbook-tag">' + action.short_title + '</span>' +
+                    '<span class="playbook-eta">⏱ ' + action.eta + '</span>' +
+                    '</footer></article>'
+                );
+            }).join("");
+        }
+
+        async function renderPayload(payload) {
+            alertPayload = payload;
+
+            const liveGas = payload.live_gas != null
+                ? String(Math.round(payload.live_gas))
+                : (payload.sensor && payload.sensor.gas) || "--";
+            const liveStatus = payload.display_status
+                || (payload.sensor && payload.sensor.status)
+                || "--";
+
+            document.getElementById("liveGas").textContent = liveGas;
+            document.getElementById("liveStatus").textContent = liveStatus;
+
+            document.getElementById("countCritical").textContent =
+                payload.summary.critical;
+            document.getElementById("countModerate").textContent =
+                payload.summary.moderate;
+            document.getElementById("countSafe").textContent =
+                payload.summary.safe_percent + "%";
+            lastAlertIso = payload.summary.last_alert_iso || null;
+            updateLastAlertDisplay();
+
+            document.getElementById("gasHealth").querySelector("p").textContent =
+                "→ " + payload.sensors.gas;
+            document.getElementById("aqiHealth").querySelector("p").textContent =
+                "→ " + payload.sensors.aqi;
+            document.getElementById("smokeHealth").querySelector("p").textContent =
+                "→ " + payload.sensors.smoke;
+
+            document.getElementById("bannerTitle").textContent =
+                payload.banner.title;
+            document.getElementById("bannerMessage").textContent =
+                payload.banner.message;
+
+            const severity = payload.current_severity || "safe";
+            const bannerSection = document.getElementById("criticalBannerSection");
+            if (bannerSection) {
+                bannerSection.setAttribute("data-severity", severity);
+            }
+            const voiceBadge = document.getElementById("voiceAlertBadge");
+            if (voiceBadge) {
+                voiceBadge.hidden = severity !== "critical";
+            }
+
+            const banner = document.getElementById("criticalBanner");
+            banner.classList.toggle("critical-flash", !!payload.banner.flash);
+
+            const liveBadge = document.getElementById("liveBadge");
+            if (liveBadge) {
+                liveBadge.classList.toggle("alert-badge-pulse", true);
+            }
+
+            if (payload.gas_thresholds) {
+                window.AQ_GAS_SAFE_MAX = payload.gas_thresholds.safe_max;
+                window.AQ_GAS_MODERATE = payload.gas_thresholds.moderate;
+                window.AQ_GAS_CRITICAL = payload.gas_thresholds.critical;
+            }
+
+            const sensorView = Object.assign({}, payload.sensor || {});
+            if (payload.display_status) {
+                sensorView.status = payload.display_status;
+            }
+            if (payload.live_gas != null) {
+                sensorView.gas = String(Math.round(payload.live_gas));
+            }
+
+            renderTable(payload.logs);
+            renderSafety(payload.safety, sensorView);
+            updateStreamSync(payload);
+            await window.AirQualityAlerts.maybePlayAlert(payload);
+        }
+
+        function downloadReport() {
+            const rows = [
+                ["Time", "Sensor", "Severity", "Status", "Detail"],
+            ];
+
+            (alertPayload.logs || []).forEach(function (log) {
+                rows.push([
+                    log.time,
+                    log.sensor,
+                    log.severity,
+                    log.status,
+                    log.detail || "",
+                ]);
+            });
+
+            const csv = rows.map(function (row) {
+                return row.map(function (cell) {
+                    return "\"" + String(cell).replace(/"/g, "\"\"") + "\"";
+                }).join(",");
+            }).join("\n");
+
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+            link.href = url;
+            link.download = "air-quality-alert-report-" + stamp + ".csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        async function refreshAlerts() {
+            try {
+                const response = await fetch("/api/alerts");
+                if (!response.ok) {
+                    return;
+                }
+                const payload = await response.json();
+                lastRefreshAt = Date.now();
+                await renderPayload(payload);
+            } catch (error) {
+                console.warn("Alert refresh failed", error);
+            }
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+        setInterval(updateLastAlertDisplay, 1000);
+        setInterval(refreshAlerts, 2000);
+        refreshAlerts();
+
+        document.getElementById("exportBtn").addEventListener("click", downloadReport);
+
+        AirQualityAlerts.init({ poll: false });
+
+        if (alertPayload && alertPayload.sensor) {
+            renderPayload(alertPayload);
+        }
+    </script>
+
+    {% include 'includes/pwa_install_bar.html' %}
+    <script src="{{ url_for('static', filename='js/pwa-install.js') }}?v=1"></script>
+</body>
+
+</html>

@@ -1,0 +1,40 @@
+{# Shared navbar — set active_page: 'dashboard' | 'analytics' | 'alerts' #}
+<nav class="dashboard-navbar{% if nav_extra_class %} {{ nav_extra_class }}{% endif %}">
+    {% if show_clock %}
+    <div class="navbar-start">
+        <div class="dashboard-logo">{{ logo_text|default('AQ MONITOR') }}</div>
+        <div class="live-clock navbar-clock" id="liveClock">
+            <span id="clockTime">--:--:--</span>
+            <span class="live-dot">● LIVE</span>
+        </div>
+    </div>
+    {% else %}
+    <div class="dashboard-logo">{{ logo_text|default('AQ MONITOR') }}</div>
+    {% endif %}
+
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+
+    <ul class="nav-links" id="navLinks">
+        <li>
+            <a href="{{ url_for('dashboard') }}"
+               class="{% if active_page == 'dashboard' %}nav-active{% endif %}">Dashboard</a>
+        </li>
+        <li>
+            <a href="{{ url_for('analytics') }}"
+               class="{% if active_page == 'analytics' %}nav-active{% endif %}">Analytics</a>
+        </li>
+        <li>
+            <a href="{{ url_for('alerts') }}"
+               class="{% if active_page == 'alerts' %}nav-active{% endif %}">Alerts</a>
+        </li>
+        <li>
+            <a href="{{ url_for('settings_page') }}"
+               class="{% if active_page == 'settings' %}nav-active{% endif %}">Settings</a>
+        </li>
+        <li>
+            <a href="{{ url_for('home') }}">
+                <button type="button" class="logout-btn">Logout</button>
+            </a>
+        </li>
+    </ul>
+</nav>

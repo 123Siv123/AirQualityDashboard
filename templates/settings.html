@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Settings | AQ Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    {% include 'includes/pwa_head.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=15">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-pwa.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}?v=1">
+</head>
+
+<body class="app-shell settings-page">
+
+    {% set active_page = 'settings' %}
+    {% set logo_text = 'AQ SETTINGS' %}
+    {% include 'includes/app_nav.html' %}
+
+    <div class="app-content settings-main">
+
+        <header class="settings-hero">
+            <h1>⚙ System Settings</h1>
+            <p>Configure gas thresholds, serial port, smoke latch, and Twilio SMS. Changes apply immediately.</p>
+        </header>
+
+        <form id="settingsForm" class="settings-layout" novalidate>
+
+            <section class="settings-card settings-card--gas">
+                <h2>🌡 Gas thresholds</h2>
+                <div class="settings-grid">
+                    <div class="settings-field settings-field--full">
+                        <label for="gas_sensor_profile">Sensor profile</label>
+                        <select id="gas_sensor_profile" name="gas_sensor_profile">
+                            <option value="standard">Standard (0–240 safe / 281+ poor)</option>
+                            <option value="mq2">MQ-2 (high baseline)</option>
+                        </select>
+                        <p class="settings-hint">Switching profile loads preset values — click “Load profile preset” or save to apply.</p>
+                    </div>
+                    <div class="settings-field">
+                        <label for="gas_safe_max">Safe max (≤)</label>
+                        <input type="number" id="gas_safe_max" name="gas_safe_max" min="0" step="1" required>
+                    </div>
+                    <div class="settings-field">
+                        <label for="gas_moderate">Moderate from (≥)</label>
+                        <input type="number" id="gas_moderate" name="gas_moderate" min="0" step="1" required>
+                    </div>
+                    <div class="settings-field">
+                        <label for="gas_moderate_max">Moderate max (≤)</label>
+                        <input type="number" id="gas_moderate_max" name="gas_moderate_max" min="0" step="1" required>
+                    </div>
+                    <div class="settings-field">
+                        <label for="gas_critical">Poor / smoke (≥)</label>
+                        <input type="number" id="gas_critical" name="gas_critical" min="0" step="1" required>
+                    </div>
+                    <div class="settings-field">
+                        <label for="smoke_latch_sec">Smoke UI latch (sec)</label>
+                        <input type="number" id="smoke_latch_sec" name="smoke_latch_sec" min="5" max="600" step="1" required>
+                    </div>
+                </div>
+                <div class="settings-actions">
+                    <button type="button" class="settings-btn settings-btn--secondary" id="loadPresetBtn">Load profile preset</button>
+                </div>
+            </section>
+
+            <section class="settings-card settings-card--serial">
+                <h2>🔌 Serial / ESP32</h2>
+                <div class="settings-grid">
+                    <div class="settings-field">
+                        <label for="serial_port">Port (e.g. COM7)</label>
+                        <input type="text" id="serial_port" name="serial_port" required>
+                    </div>
+                    <div class="settings-field">
+                        <label for="serial_baud">Baud rate</label>
+                        <input type="number" id="serial_baud" name="serial_baud" min="9600" step="1" required>
+                    </div>
+                </div>
+                <p class="settings-hint">Serial: <strong id="serialStatusText">—</strong></p>
+                <div class="settings-actions">
+                    <button type="button" class="settings-btn settings-btn--secondary" id="reconnectSerialBtn">Reconnect serial</button>
+                </div>
+            </section>
+
+            <section class="settings-card settings-card--twilio">
+                <h2>📱 Twilio SMS
+                    <span class="settings-status-pill settings-status-pill--off" id="smsStatusPill">—</span>
+                </h2>
+                <div class="settings-toggle">
+                    <input type="checkbox" id="twilio_enabled" name="twilio_enabled">
+                    <label for="twilio_enabled">Enable SMS alerts (critical / poor air)</label>
+                </div>
+                <div class="settings-toggle">
+                    <input type="checkbox" id="twilio_sms_moderate" name="twilio_sms_moderate">
+                    <label for="twilio_sms_moderate">Also SMS on moderate air quality</label>
+                </div>
+                <div class="settings-grid" style="margin-top: 12px;">
+                    <div class="settings-field">
+                        <label for="twilio_from_number">From number</label>
+                        <input type="tel" id="twilio_from_number" name="twilio_from_number" placeholder="+1…">
+                    </div>
+                    <div class="settings-field">
+                        <label for="twilio_to_number">Alert phone (To)</label>
+                        <input type="tel" id="twilio_to_number" name="twilio_to_number" placeholder="+91…" required>
+                    </div>
+                    <div class="settings-field">
+                        <label for="twilio_sms_cooldown_sec">SMS cooldown (sec)</label>
+                        <input type="number" id="twilio_sms_cooldown_sec" name="twilio_sms_cooldown_sec" min="30" step="1">
+                    </div>
+                    <div class="settings-field">
+                        <label>Account SID (from .env)</label>
+                        <input type="text" id="twilio_account_sid_masked" readonly disabled>
+                    </div>
+                </div>
+                <p class="settings-hint">
+                    Auth token stays in <code>.env</code> (not shown). Last SMS:
+                    <strong id="smsLastSent">—</strong>
+                    · Sent count: <strong id="smsSendCount">0</strong>
+                </p>
+                <div class="settings-actions">
+                    <button type="button" class="settings-btn settings-btn--secondary" id="testSmsBtn">Send test SMS</button>
+                </div>
+            </section>
+
+            <div class="settings-actions settings-actions--footer">
+                <button type="submit" class="settings-btn settings-btn--primary">Save</button>
+                <button type="button" class="settings-btn settings-btn--secondary" id="saveAndBackBtn">Save &amp; Back</button>
+                <a href="{{ url_for('dashboard') }}" class="settings-btn settings-btn--secondary settings-back-link">Back</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="settings-toast" id="settingsToast" hidden></div>
+
+    {% include 'includes/pwa_install_bar.html' %}
+    <script id="initialSettings" type="application/json">{{ settings_json|safe }}</script>
+    <script src="{{ url_for('static', filename='js/settings.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/pwa-install.js') }}?v=1"></script>
+</body>
+
+</html>

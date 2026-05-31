@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Live Monitoring Dashboard | AQ Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    {% include 'includes/pwa_head.html' %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=15">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-compact.css') }}?v=23">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-pwa.css') }}?v=1">
+    <meta name="dashboard-build" content="layout-v10">
+</head>
+
+<body class="app-shell dashboard-page dashboard-enterprise">
+
+    <div class="dash-build-tag" id="dashBuildTag">Build v15 · gas-only status</div>
+
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-ring"></div>
+        <span class="loader-text">Initializing sensors</span>
+    </div>
+
+    <div class="bg-particles" aria-hidden="true">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+    </div>
+
+    <div class="app-content">
+
+        {% set active_page = 'dashboard' %}
+        {% set logo_text = 'AQ MONITOR' %}
+        {% include 'includes/app_nav.html' %}
+
+        <div class="dash-shell">
+
+            <header class="dash-command-banner highlight-box neon-panel">
+                <span class="live-pill live-pill--banner"><span class="pulse-dot"></span> LIVE STREAM</span>
+                <h1 class="dash-command-title">Air Quality Command Center</h1>
+                <span class="dash-toolbar__meta" id="dashLastSync">Sync —</span>
+                <div class="sound-unlock-bar" id="soundUnlockBar" hidden>
+                        <p>Voice alerts only when smoke is detected (gas &gt; {{ gas_critical|default(281) - 1 }})</p>
+                        <button type="button" class="sound-enable-btn" id="enableSoundBtn">Enable Smoke Alerts</button>
+                </div>
+            </header>
+
+            <div class="dash-board dash-board--1x3">
+
+                <!-- BOX 1 — sensors, system, health (separate panels) -->
+                <aside class="dash-col dash-col--left">
+                    <div class="dash-col-box">
+
+                    <section class="dash-panel neon-panel highlight-box">
+                        <header class="dash-panel__head">
+                            <h2>Sensor Overview</h2>
+                            <span class="dash-chip dash-chip--live">Live</span>
+                        </header>
+                        <div class="overview-list">
+                            <div class="overview-row overview-row--priority highlight-box" id="kpiGasCard">
+                                <span class="overview-row__icon">☁</span>
+                                <div class="overview-row__body">
+                                    <span class="overview-row__label">Gas / Smoke</span>
+                                    <strong class="overview-row__value dash-num" id="kpiGas">{{ data.gas }}<small>index</small></strong>
+                                </div>
+                                <div class="overview-row__tail">
+                                    <span class="overview-row__unit">mod {{ gas_moderate|default(241) }}+ · poor {{ gas_critical|default(281) }}+</span>
+                                    <span class="sensor-status-dot inline-dot" id="dotGas"></span>
+                                </div>
+                            </div>
+                            <div class="overview-row highlight-box">
+                                <span class="overview-row__icon">🌡</span>
+                                <div class="overview-row__body">
+                                    <span class="overview-row__label">Temperature</span>
+                                    <strong class="overview-row__value dash-num" id="kpiTemp">{{ data.temperature }}<small>°C</small></strong>
+                                </div>
+                                <div class="overview-row__tail">
+                                    <span class="sensor-status-dot inline-dot" id="dotTemp"></span>
+                                </div>
+                            </div>
+                            <div class="overview-row highlight-box">
+                                <span class="overview-row__icon">💧</span>
+                                <div class="overview-row__body">
+                                    <span class="overview-row__label">Humidity</span>
+                                    <strong class="overview-row__value dash-num" id="kpiHum">{{ data.humidity }}<small>%</small></strong>
+                                </div>
+                                <div class="overview-row__tail">
+                                    <span class="sensor-status-dot inline-dot" id="dotHum"></span>
+                                </div>
+                            </div>
+                            <div class="overview-row highlight-box">
+                                <span class="overview-row__icon">📈</span>
+                                <div class="overview-row__body">
+                                    <span class="overview-row__label">Peak Gas (session)</span>
+                                    <strong class="overview-row__value dash-num" id="kpiPeakGas">--<small>index</small></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="dash-panel neon-panel highlight-box">
+                        <header class="dash-panel__head">
+                            <h2>System Status</h2>
+                        </header>
+                        <div class="status-list">
+                            <div class="status-list__row highlight-box">
+                                <span>ESP32 Link</span>
+                                <strong id="serialStatus"><span class="status-pill status-pill--ok">Online</span></strong>
+                            </div>
+                            <div class="status-list__row highlight-box">
+                                <span>Data Stream</span>
+                                <strong><span class="status-pill status-pill--ok">Active</span></strong>
+                            </div>
+                            <div class="status-list__row highlight-box">
+                                <span>Risk Level</span>
+                                <strong id="riskLevelInline">—</strong>
+                            </div>
+                        </div>
+                        <span class="status-led" id="serialLed" hidden aria-hidden="true"></span>
+                    </section>
+
+                    <section class="dash-panel neon-panel highlight-box">
+                        <header class="dash-panel__head">
+                            <h2>Sensor Health</h2>
+                        </header>
+                        <div class="status-list">
+                            <div class="status-list__row highlight-box"><span>Gas Sensor</span><strong id="healthGas">—</strong></div>
+                            <div class="status-list__row highlight-box"><span>AQI Monitor</span><strong id="healthAqi">—</strong></div>
+                            <div class="status-list__row highlight-box"><span>Smoke Detector</span><strong id="healthSmoke">—</strong></div>
+                        </div>
+                    </section>
+
+                    </div>
+                </aside>
+
+                <!-- BOX 2 — air quality (center) -->
+                <main class="dash-col dash-col--center">
+                    <div class="dash-col-box dash-col-box--center">
+
+                    <section class="dash-panel dash-panel--hero neon-panel glass-card aqi-card aqi-tone--{{ air_quality_level|default('normal') }} {{ display_status|default(data.status)|lower|replace(' ', '-') }}"
+                             id="aqiCard" data-aq-level="{{ air_quality_level|default('normal') }}">
+                        <div class="voice-alert-badge dashboard-voice-badge" id="voiceAlertBadge" hidden>
+                            🔊 VOICE ALERT
+                        </div>
+                        <div class="dash-hero-center">
+                            <h2 class="dash-hero-title">Air Quality Status</h2>
+                            <p class="dash-hero-status" id="aqiStatusText">{{ display_status|default(data.status) }}</p>
+                            <span class="dash-chip dash-chip--hero {% if air_quality_level == 'poor' %}dash-chip--danger{% elif air_quality_level == 'moderate' %}dash-chip--warn{% else %}dash-chip--ok{% endif %}" id="heroSeverityChip">{% if air_quality_level == 'poor' %}Poor{% elif air_quality_level == 'moderate' %}Moderate{% else %}Normal{% endif %}</span>
+                            <p class="dash-hero-insight" id="aqiInsightText">
+                                Sensor readings are shown in the left panel.
+                            </p>
+                        </div>
+                    </section>
+
+                    <section class="dash-panel dash-panel--chart neon-panel">
+                        <header class="dash-panel__head">
+                            <h2>Live Monitoring</h2>
+                            <span class="dash-chip">Gas trend</span>
+                        </header>
+                        <div class="chart-wrap">
+                            <canvas id="gasChart"></canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <span class="chart-legend__gas">Gas index (live)</span>
+                        </div>
+                    </section>
+
+                    <section class="dash-panel dash-panel--insights neon-panel">
+                        <header class="dash-panel__head">
+                            <h2>AI Insights</h2>
+                        </header>
+                        <p class="insight-compact highlight-box" id="aiInsight1">Analyzing environmental patterns…</p>
+                        <p class="insight-compact highlight-box" id="aiInsight2">Ventilation efficiency stable.</p>
+                    </section>
+
+                    </div>
+                </main>
+
+                <!-- BOX 3 — gauge, alerts, activity -->
+                <aside class="dash-col dash-col--right">
+                    <div class="dash-col-box">
+
+                    <section class="dash-panel dash-panel--gauge neon-panel highlight-box">
+                        <header class="dash-panel__head">
+                            <h2>AQI Gauge</h2>
+                        </header>
+                        <div class="gauge-block">
+                            <div class="semi-gauge" id="semiGauge" aria-label="AQI semi-circular gauge">
+                                <svg class="semi-gauge__svg" viewBox="0 0 220 128" role="img">
+                                    <defs>
+                                        <filter id="gaugeHubShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                            <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.45"/>
+                                        </filter>
+                                    </defs>
+                                    <g id="gaugeArcSegments"></g>
+                                    <g id="gaugeTickLabels" class="semi-gauge__ticks"></g>
+                                    <g id="gaugeNeedleGroup" class="semi-gauge__needle-group" transform="translate(110, 106) rotate(-90)">
+                                        <line class="semi-gauge__needle" x1="0" y1="0" x2="0" y2="-70" />
+                                        <circle class="semi-gauge__hub" r="24" filter="url(#gaugeHubShadow)" />
+                                        <text class="semi-gauge__hub-value dash-num" id="gaugeValue" text-anchor="middle" dominant-baseline="middle" y="1">--</text>
+                                    <text class="semi-gauge__hub-sub" id="gaugeHubSub" text-anchor="middle" y="18">AQI</text>
+                                    </g>
+                                </svg>
+                            </div>
+                            <div class="gauge-legend gauge-legend--semi">
+                                <div class="gauge-legend__item"><span class="gauge-legend__dot gauge-legend__dot--crit"></span> 0–40 Poor (left)</div>
+                                <div class="gauge-legend__item"><span class="gauge-legend__dot gauge-legend__dot--mod"></span> 40–70 Moderate</div>
+                                <div class="gauge-legend__item"><span class="gauge-legend__dot gauge-legend__dot--safe"></span> 70–100 Good (right)</div>
+                                <p class="gauge-gas-raw">Gas sensor: <strong class="dash-num" id="gaugeGasRaw">--</strong> index</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="dash-panel dash-panel--alerts neon-panel highlight-box" id="kpiAlertCard">
+                        <header class="dash-panel__head">
+                            <h2>Alerts</h2>
+                            <span class="dash-chip dash-chip--alert">Events</span>
+                        </header>
+                        <div class="alert-stats">
+                            <div class="alert-stat highlight-box">
+                                <span>Total events</span>
+                                <strong class="dash-num" id="kpiAlerts">--</strong>
+                            </div>
+                            <div class="alert-stat highlight-box">
+                                <span>Risk level</span>
+                                <strong class="dash-num" id="riskLevel">—</strong>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="dash-panel dash-panel--activity neon-panel highlight-box dash-panel--grow">
+                        <header class="dash-panel__head">
+                            <h2>Recent Activity</h2>
+                        </header>
+                        <div class="activity-feed" id="recentActivity">
+                            <div class="activity-feed__item highlight-box">
+                                <span class="activity-feed__time">--</span>
+                                <span class="activity-feed__text">Waiting for events…</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    </div>
+                </aside>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.AQ_GAS_CRITICAL = {{ gas_critical|default(281) }};
+        window.AQ_GAS_MODERATE = {{ gas_moderate|default(241) }};
+        window.AQ_GAS_SAFE_MAX = {{ gas_safe_max|default(240) }};
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/air-alerts.js') }}?v=8"></script>
+    <script>
+        const GAUGE_AQI_MAX = 100;
+        const GAUGE_SEGMENT_COLORS = [
+            "#dc2626", "#f87171", "#fb923c", "#facc15", "#a3e635", "#4ade80", "#15803d"
+        ];
+        const GAUGE_TICKS = [0, 20, 40, 60, 80, 100];
+
+        /** Higher score = better air. Low needle (left/red) = poor, high (right/green) = good. */
+        function gasToAirQualityIndex(gas) {
+            const crit = window.AQ_GAS_CRITICAL || 281;
+            const mod = window.AQ_GAS_MODERATE || 241;
+            const g = Math.max(0, parseFloat(gas) || 0);
+            const scaleMax = Math.max(crit * 2, g, 300);
+
+            if (g <= mod) {
+                return Math.round(100 - (g / mod) * 35);
+            }
+            if (g <= crit) {
+                const t = (g - mod) / (crit - mod);
+                return Math.round(65 - t * 25);
+            }
+            const t = Math.min(1, (g - crit) / (scaleMax - crit));
+            return Math.max(0, Math.round(40 - t * 40));
+        }
+
+        function polarToXY(cx, cy, r, deg) {
+            const rad = (deg * Math.PI) / 180;
+            return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+        }
+
+        function annularArcPath(cx, cy, rOut, rIn, startDeg, endDeg) {
+            const gap = 1.2;
+            const s = startDeg + gap;
+            const e = endDeg - gap;
+            const p1 = polarToXY(cx, cy, rOut, s);
+            const p2 = polarToXY(cx, cy, rOut, e);
+            const p3 = polarToXY(cx, cy, rIn, e);
+            const p4 = polarToXY(cx, cy, rIn, s);
+            const large = e - s > 180 ? 1 : 0;
+            return (
+                "M " + p1.x + " " + p1.y +
+                " A " + rOut + " " + rOut + " 0 " + large + " 0 " + p2.x + " " + p2.y +
+                " L " + p3.x + " " + p3.y +
+                " A " + rIn + " " + rIn + " 0 " + large + " 1 " + p4.x + " " + p4.y +
+                " Z"
+            );
+        }
+
+        function initSemiGauge() {
+            const segGroup = document.getElementById("gaugeArcSegments");
+            const tickGroup = document.getElementById("gaugeTickLabels");
+            if (!segGroup || segGroup.childElementCount) return;
+
+            const cx = 110;
+            const cy = 106;
+            const rOut = 88;
+            const rIn = 58;
+            const segCount = GAUGE_SEGMENT_COLORS.length;
+            const startAngle = 180;
+            const endAngle = 0;
+            const step = (startAngle - endAngle) / segCount;
+
+            GAUGE_SEGMENT_COLORS.forEach(function (color, i) {
+                const a1 = startAngle - i * step;
+                const a2 = startAngle - (i + 1) * step;
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", annularArcPath(cx, cy, rOut, rIn, a2, a1));
+                path.setAttribute("fill", color);
+                path.setAttribute("stroke", "#0f172a");
+                path.setAttribute("stroke-width", "2");
+                segGroup.appendChild(path);
+            });
+
+            GAUGE_TICKS.forEach(function (val) {
+                const ratio = val / GAUGE_AQI_MAX;
+                const deg = 180 - ratio * 180;
+                const pos = polarToXY(cx, cy, rOut + 14, deg);
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", pos.x);
+                text.setAttribute("y", pos.y);
+                text.setAttribute("class", "semi-gauge__tick-label");
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("dominant-baseline", "middle");
+                text.textContent = val;
+                tickGroup.appendChild(text);
+            });
+        }
+
+        function aqiToNeedleRotation(aqi) {
+            const v = Math.max(0, Math.min(GAUGE_AQI_MAX, aqi));
+            const arcDeg = 180 - (v / GAUGE_AQI_MAX) * 180;
+            return 90 - arcDeg;
+        }
+
+        function setSemiGauge(gasText, statusText) {
+            const needle = document.getElementById("gaugeNeedleGroup");
+            const valueEl = document.getElementById("gaugeValue");
+            const gasRawEl = document.getElementById("gaugeGasRaw");
+            if (!needle || !valueEl) return;
+            const gas = parseFloat(String(gasText).replace(/[^\d.]/g, "")) || 0;
+            const level = airQualityLevel(statusText);
+            const aqi = aqiScoreForLevel(level, gas);
+            const rot = aqiToNeedleRotation(aqi);
+            needle.setAttribute("transform", "translate(110, 106) rotate(" + rot + ")");
+            valueEl.textContent = aqi;
+            if (gasRawEl) {
+                gasRawEl.textContent = Math.round(gas);
+            }
+        }
+
+        function severityToGauge(severity, gasText, statusText) {
+            setSemiGauge(gasText, statusText);
+        }
+
+        initSemiGauge();
+
+        const gasChart = new Chart(document.getElementById("gasChart").getContext("2d"), {
+            type: "line",
+            data: {
+                labels: ["", "", "", "", "", "", "", ""],
+                datasets: [{
+                    label: "Gas Index",
+                    data: [0, 0, 0, 0, 0, 0, 0, 0],
+                    borderColor: "#38bdf8",
+                    backgroundColor: "rgba(56, 189, 248, 0.12)",
+                    borderWidth: 2,
+                    tension: 0.45,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 350 },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        ticks: { color: "#94a3b8", font: { size: 15, weight: "600" }, maxTicksLimit: 6 },
+                        grid: { display: false },
+                    },
+                    y: {
+                        ticks: { color: "#94a3b8", font: { size: 15, weight: "600" }, maxTicksLimit: 5 },
+                        grid: { color: "rgba(255,255,255,0.04)" },
+                    },
+                },
+            },
+        });
+
+        let chartIndex = 0;
+
+        function parseGasValue(gasText) {
+            return parseFloat(String(gasText || "").replace(/[^\d.]/g, "")) || 0;
+        }
+
+        function gasThresholdsFromPayload(payload) {
+            const th = (payload && payload.gas_thresholds) || {};
+            return {
+                safeMax: Number(th.safe_max) || window.AQ_GAS_SAFE_MAX || 240,
+                moderate: Number(th.moderate) || window.AQ_GAS_MODERATE || 241,
+                critical: Number(th.critical) || window.AQ_GAS_CRITICAL || 281,
+            };
+        }
+
+        function liveGasNumber(gasText, payload) {
+            if (payload && payload.live_gas != null && !isNaN(payload.live_gas)) {
+                return Number(payload.live_gas);
+            }
+            return parseGasValue(gasText);
+        }
+
+        function levelFromGasValue(gas, thresholds) {
+            const th = thresholds || {
+                moderate: window.AQ_GAS_MODERATE || 241,
+                critical: window.AQ_GAS_CRITICAL || 281,
+            };
+            const g = Number(gas);
+            if (isNaN(g)) {
+                return "normal";
+            }
+            if (g >= th.critical) {
+                return "poor";
+            }
+            if (g >= th.moderate) {
+                return "moderate";
+            }
+            return "normal";
+        }
+
+        function levelFromGas(gasText, payload) {
+            const th = gasThresholdsFromPayload(payload);
+            return levelFromGasValue(liveGasNumber(gasText, payload), th);
+        }
+
+        function statusWordsForLevel(level) {
+            if (level === "poor") {
+                return "Poor Air Quality";
+            }
+            if (level === "moderate") {
+                return "Moderate Air Quality";
+            }
+            return "Normal Air Quality";
+        }
+
+        function syncAirQualityHero(gasText, payload) {
+            const th = gasThresholdsFromPayload(payload);
+            if (payload && payload.gas_thresholds) {
+                window.AQ_GAS_CRITICAL = th.critical;
+                window.AQ_GAS_MODERATE = th.moderate;
+                window.AQ_GAS_SAFE_MAX = th.safeMax;
+            }
+            const gasNum = liveGasNumber(gasText, payload);
+            const level =
+                payload && payload.air_quality_level && payload.live_gas === gasNum
+                    ? payload.air_quality_level
+                    : levelFromGasValue(gasNum, th);
+            const displayStatus = statusWordsForLevel(level);
+
+            document.getElementById("aqiStatusText").textContent = displayStatus;
+            applyAqiCardTone(displayStatus);
+            updateInsights(
+                level === "poor" ? "critical" : level === "moderate" ? "moderate" : "safe",
+                displayStatus
+            );
+            severityToGauge(null, gasText, displayStatus);
+            setSensorDots(
+                level === "poor" ? "critical" : level === "moderate" ? "moderate" : "safe"
+            );
+        }
+
+        function airQualityLevel(statusText) {
+            const status = (statusText || "").toLowerCase().trim();
+            if (!status || status === "--") {
+                return "normal";
+            }
+            if (/\bpoor\b/.test(status) || /\b(critical|hazard|unhealthy)\b/.test(status)) {
+                return "poor";
+            }
+            if (/\bmoderate\b/.test(status) || /\b(caution|warning)\b/.test(status)) {
+                return "moderate";
+            }
+            if (/\b(normal|good|safe)\b/.test(status)) {
+                return "normal";
+            }
+            return "normal";
+        }
+
+        function aqiScoreForLevel(level, gas) {
+            const fromGas = gasToAirQualityIndex(gas);
+            if (level === "normal") {
+                return Math.max(78, Math.min(100, fromGas));
+            }
+            if (level === "moderate") {
+                return Math.max(42, Math.min(72, fromGas));
+            }
+            return Math.max(5, Math.min(38, fromGas));
+        }
+
+        function applyAqiCardTone(statusText) {
+            const card = document.getElementById("aqiCard");
+            if (!card) return;
+            const statusClass = (statusText || "unknown").toLowerCase().replace(/\s+/g, "-");
+            const level = airQualityLevel(statusText);
+            card.dataset.aqLevel = level;
+            card.className =
+                "dash-panel dash-panel--hero neon-panel glass-card aqi-card " +
+                statusClass +
+                " aqi-tone--" +
+                level;
+        }
+
+        function setMetricValue(id, value, unit) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const v = value != null && value !== "" ? value : "--";
+            el.innerHTML = v + (unit ? "<small>" + unit + "</small>" : "");
+        }
+
+        function updateInsights(severity, displayStatus) {
+            const i1 = document.getElementById("aiInsight1");
+            const i2 = document.getElementById("aiInsight2");
+            const risk = document.getElementById("riskLevel");
+            const riskInline = document.getElementById("riskLevelInline");
+            const chip = document.getElementById("heroSeverityChip");
+            const aqiText = document.getElementById("aqiInsightText");
+            const gasCard = document.getElementById("kpiGasCard");
+            const alertCard = document.getElementById("kpiAlertCard");
+
+            const level = airQualityLevel(displayStatus);
+            const chipLabel =
+                level === "poor" ? "Poor" : level === "moderate" ? "Moderate" : "Normal";
+
+            const riskLabel = level.charAt(0).toUpperCase() + level.slice(1);
+            risk.textContent = riskLabel;
+            if (riskInline) {
+                const pillCls =
+                    level === "poor" ? "status-pill--off" :
+                    level === "moderate" ? "status-pill--warn" : "status-pill--ok";
+                riskInline.innerHTML =
+                    '<span class="status-pill ' + pillCls + '">' + chipLabel + "</span>";
+            }
+            if (chip) {
+                chip.textContent = chipLabel;
+                chip.className =
+                    "dash-chip dash-chip--hero " +
+                    (level === "poor" ? "dash-chip--danger" :
+                        level === "moderate" ? "dash-chip--warn" : "dash-chip--ok");
+            }
+
+            if (level === "poor") {
+                i1.textContent = "Poor air quality — increase ventilation.";
+                i2.textContent = "Voice alert plays only when smoke is detected.";
+                aqiText.textContent = "Check gas/smoke sensor readings on the left.";
+                gasCard.classList.add("critical-glow");
+                alertCard.classList.add("critical-glow");
+            } else if (level === "moderate") {
+                i1.textContent = "Moderate air quality — monitor peak hours.";
+                i2.textContent = "Consider proactive ventilation.";
+                aqiText.textContent = "Elevated gas readings — stay aware.";
+                gasCard.classList.remove("critical-glow");
+                alertCard.classList.remove("critical-glow");
+            } else {
+                i1.textContent = "Normal air quality — environment stable.";
+                i2.textContent = "Baseline ventilation performing well.";
+                aqiText.textContent = "All readings within safe range.";
+                gasCard.classList.remove("critical-glow");
+                alertCard.classList.remove("critical-glow");
+            }
+        }
+
+        function renderActivity(logs) {
+            const container = document.getElementById("recentActivity");
+            if (!logs || logs.length === 0) {
+                container.innerHTML =
+                    '<div class="activity-feed__item highlight-box"><span class="activity-feed__time">--</span>' +
+                    '<span class="activity-feed__text">No events yet</span></div>';
+                return;
+            }
+            container.innerHTML = logs.slice(0, 5).map(function (log) {
+                const sev = log.severity || "safe";
+                const badgeClass =
+                    sev === "critical" ? "critical" : sev === "moderate" ? "moderate" : "safe";
+                return (
+                    '<div class="activity-feed__item highlight-box">' +
+                    '<span class="activity-feed__time">' + log.time + "</span>" +
+                    '<span class="activity-feed__text">' + log.sensor + "</span>" +
+                    '<span class="activity-feed__badge activity-feed__badge--' + badgeClass + '">' +
+                    sev + "</span></div>"
+                );
+            }).join("");
+        }
+
+        function setSensorDots(severity) {
+            const cls = severity === "critical" ? "alert" : severity === "moderate" ? "warn" : "";
+            ["dotTemp", "dotHum", "dotGas"].forEach(function (id) {
+                document.getElementById(id).className = "sensor-status-dot inline-dot " + cls;
+            });
+        }
+
+        function setHealthPill(id, text) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const t = String(text || "").toLowerCase();
+            let cls = "status-pill--ok";
+            if (t.includes("offline") || t.includes("alert") || t.includes("critical")) {
+                cls = "status-pill--off";
+            } else if (/\bmoderate\b/i.test(t)) {
+                cls = "status-pill--warn";
+            }
+            el.innerHTML = '<span class="status-pill ' + cls + '">' + text + "</span>";
+        }
+
+        async function refreshDashboard() {
+            try {
+                const response = await fetch("/api/alerts");
+                if (!response.ok) return;
+
+                const payload = await response.json();
+                const sensor = payload.sensor || {};
+                const summary = payload.summary || {};
+
+                setMetricValue("kpiGas", sensor.gas, "index");
+                setMetricValue("kpiTemp", sensor.temperature, "°C");
+                setMetricValue("kpiHum", sensor.humidity, "%");
+                setMetricValue("kpiPeakGas", summary.peak_gas ?? sensor.gas, "index");
+
+                const syncEl = document.getElementById("dashLastSync");
+                if (syncEl) {
+                    const now = new Date();
+                    syncEl.textContent =
+                        "Sync " +
+                        now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                }
+                document.getElementById("kpiAlerts").textContent =
+                    (summary.critical || 0) + (summary.moderate || 0);
+
+                syncAirQualityHero(sensor.gas, payload);
+
+                if (payload.sensors) {
+                    setHealthPill("healthGas", payload.sensors.gas);
+                    setHealthPill("healthAqi", payload.sensors.aqi);
+                    setHealthPill("healthSmoke", payload.sensors.smoke);
+                    const serial = document.getElementById("serialStatus");
+                    if (payload.sensors.gas === "Offline") {
+                        serial.innerHTML = '<span class="status-pill status-pill--off">Offline</span>';
+                    } else {
+                        serial.innerHTML = '<span class="status-pill status-pill--ok">Online</span>';
+                    }
+                }
+
+                renderActivity(payload.logs);
+
+                const gasVal = parseGasValue(sensor.gas);
+                gasChart.data.datasets[0].data.push(gasVal);
+                gasChart.data.datasets[0].data.shift();
+                chartIndex += 1;
+                gasChart.data.labels.push("");
+                gasChart.data.labels.shift();
+                gasChart.update("none");
+
+                await window.AirQualityAlerts.maybePlayAlert(payload);
+            } catch (error) {
+                console.warn("Dashboard refresh failed", error);
+            }
+        }
+
+        window.addEventListener("load", function () {
+            setTimeout(function () {
+                document.getElementById("pageLoader").classList.add("hidden");
+            }, 350);
+        });
+
+        AirQualityAlerts.init({ poll: false });
+        setInterval(refreshDashboard, 2000);
+        refreshDashboard();
+    </script>
+
+    {% include 'includes/pwa_install_bar.html' %}
+    <script src="{{ url_for('static', filename='js/pwa-install.js') }}?v=1"></script>
+</body>
+
+</html>

@@ -1,0 +1,125 @@
+```html
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Smart Air Quality Monitoring System</title>
+
+    <meta http-equiv="refresh" content="2">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            AQ MONITOR
+        </div>
+
+        <ul class="nav-links">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Analytics</a></li>
+            <li><a href="#">Alerts</a></li>
+            <li><a href="#">System</a></li>
+        </ul>
+
+    </nav>
+
+    <!-- HERO SECTION -->
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <div class="status-badge">
+                ● SYSTEM ACTIVE
+            </div>
+
+            <h1>
+                SMART AIR QUALITY
+                <br>
+                MONITORING SYSTEM
+            </h1>
+
+            <p>
+                Real-Time Environmental Intelligence
+                powered by ESP32 and IoT Sensor Analytics
+            </p>
+
+            <a href="#dashboard">
+                <button class="hero-btn">
+                    VIEW LIVE ANALYTICS
+                </button>
+            </a>
+
+        </div>
+
+    </section>
+    ```html id="k2f9vx"
+<!-- AQI STATUS PANEL -->
+
+<section class="aqi-panel">
+
+    <h2>CURRENT AIR QUALITY STATUS</h2>
+
+    <div class="aqi-box">
+
+        <div class="aqi-indicator"></div>
+
+        <h1>{{ data.status }}</h1>
+
+        <p>
+            Real-time environmental condition analysis
+            based on live IoT sensor data
+        </p>
+
+    </div>
+
+</section>
+```
+
+
+    <!-- DASHBOARD SECTION -->
+
+    <section id="dashboard" class="dashboard">
+
+        <h2 class="section-title">
+            LIVE ENVIRONMENT ANALYTICS
+        </h2>
+
+        <div class="cards">
+
+            <div class="card">
+                <h3>🌡 Temperature</h3>
+                <p>{{ data.temperature }}</p>
+            </div>
+
+            <div class="card">
+                <h3>💧 Humidity</h3>
+                <p>{{ data.humidity }}</p>
+            </div>
+
+            <div class="card">
+                <h3>☁ Gas Value</h3>
+                <p>{{ data.gas }}</p>
+            </div>
+
+            <div class="card">
+                <h3>🚨 Air Quality</h3>
+                <p>{{ data.status }}</p>
+            </div>
+
+        </div>
+
+    </section>
+
+</body>
+
+</html>
+```

@@ -1,0 +1,428 @@
+/**
+ * Analytics — single viewport, no page scroll (Grid v3)
+ */
+html:has(body.analytics-page),
+body.analytics-page.app-shell {
+    height: 100%;
+    max-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+body.analytics-page {
+    --ag-gap: 12px;
+    --ag-rail: 232px;
+    --ag-top-h: clamp(148px, 19vh, 178px);
+}
+
+body.analytics-page > .dashboard-navbar {
+    flex-shrink: 0;
+    margin-bottom: 0 !important;
+}
+
+body.analytics-page .app-content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+body.analytics-page .page-container.analytics-shell {
+    padding: 8px 12px 8px !important;
+    flex: 1;
+    min-height: 0;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ag-gap);
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    overflow: hidden;
+    box-sizing: border-box;
+    align-items: stretch;
+}
+
+body.analytics-page .analytics-header-zone {
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+body.analytics-page .analytics-stream-bar {
+    width: 100%;
+    margin: 0;
+    padding: 8px 16px !important;
+}
+
+body.analytics-page .analytics-hero-modern {
+    padding: 0 !important;
+    margin: 0;
+}
+
+body.analytics-page .analytics-hero-modern h1 {
+    font-size: clamp(22px, 2.8vw, 36px) !important;
+    margin: 0 0 2px !important;
+    line-height: 1.15;
+}
+
+body.analytics-page .analytics-hero-modern p {
+    font-size: 15px !important;
+    margin: 0;
+}
+
+body.analytics-page .analytics-split {
+    flex: 1;
+    min-height: 0;
+    display: grid !important;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) !important;
+    gap: var(--ag-gap) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    justify-content: start !important;
+    justify-items: stretch !important;
+    overflow: hidden;
+    align-items: stretch !important;
+}
+
+body.analytics-page .analytics-col--left {
+    grid-column: 1 !important;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ag-gap);
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    justify-self: start;
+    width: 100%;
+}
+
+body.analytics-page .analytics-col--right {
+    grid-column: 2 !important;
+    grid-row: 1;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto auto;
+    gap: var(--ag-gap);
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    justify-self: stretch;
+    width: 100%;
+}
+
+body.analytics-page .analytics-top-row {
+    flex: 0 0 var(--ag-top-h);
+    max-height: var(--ag-top-h);
+    min-height: var(--ag-top-h);
+    display: grid !important;
+    grid-template-columns: minmax(200px, 36%) minmax(0, 1fr) !important;
+    gap: var(--ag-gap) !important;
+    width: 100% !important;
+    margin: 0 !important;
+    overflow: hidden;
+}
+
+body.analytics-page .analytics-spectrum-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    padding: 12px 14px !important;
+    margin: 0;
+    overflow: hidden;
+}
+
+body.analytics-page .analytics-spectrum-panel .chart-card-head {
+    margin-bottom: 8px !important;
+}
+
+body.analytics-page .analytics-spectrum-panel .chart-card-head h2 {
+    font-size: 17px !important;
+}
+
+body.analytics-page .analytics-spectrum-panel .chart-tag {
+    font-size: 12px !important;
+}
+
+body.analytics-page .chart-canvas-wrap--spectrum {
+    flex: 1 1 auto;
+    height: auto !important;
+    min-height: 118px !important;
+    max-height: 100% !important;
+}
+
+body.analytics-page .analytics-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    min-height: 0;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+body.analytics-page .analytics-kpi {
+    padding: 12px 14px !important;
+    justify-content: center;
+    gap: 6px !important;
+    min-height: 0;
+    margin: 0;
+}
+
+body.analytics-page .analytics-kpi strong {
+    font-size: clamp(22px, 2.4vw, 30px) !important;
+    line-height: 1.1 !important;
+}
+
+body.analytics-page .analytics-kpi .kpi-label {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    margin-bottom: 4px !important;
+}
+
+body.analytics-page .analytics-kpi small,
+body.analytics-page .kpi-trend-mini {
+    font-size: 12px !important;
+}
+
+body.analytics-page .analytics-col--left .analytics-layout {
+    flex: 1;
+    min-height: 0;
+    display: grid !important;
+    grid-template-columns: var(--ag-rail) minmax(0, 1fr) !important;
+    gap: var(--ag-gap) !important;
+    width: 100% !important;
+    margin: 0 !important;
+    overflow: hidden;
+}
+
+body.analytics-page .analytics-sidebar {
+    position: static;
+    align-self: stretch;
+    margin: 0;
+    padding: 16px 14px !important;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.analytics-page .analytics-sidebar h3 {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    margin: 10px 0 8px !important;
+}
+
+body.analytics-page .analytics-sidebar h3:first-child {
+    margin-top: 0 !important;
+}
+
+body.analytics-page .filter-btn {
+    padding: 12px 14px !important;
+    margin-bottom: 8px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+}
+
+body.analytics-page .insights-list {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+body.analytics-page .insights-list li {
+    font-size: 13px !important;
+    padding: 9px 11px !important;
+    margin-bottom: 6px !important;
+    line-height: 1.4;
+}
+
+body.analytics-page .sidebar-stat {
+    margin-top: auto;
+    padding: 12px !important;
+}
+
+body.analytics-page .sidebar-stat span {
+    font-size: 12px !important;
+}
+
+body.analytics-page .sidebar-stat strong {
+    font-size: 26px !important;
+}
+
+body.analytics-page .sidebar-stat small {
+    font-size: 11px !important;
+}
+
+body.analytics-page .analytics-charts--main {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: var(--ag-gap) !important;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+body.analytics-page .analytics-charts--main .chart-card {
+    grid-column: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0;
+    min-height: 0;
+    margin: 0 !important;
+    padding: 10px 12px !important;
+    overflow: hidden;
+}
+
+body.analytics-page .chart-card-head {
+    margin-bottom: 6px !important;
+}
+
+body.analytics-page .chart-card-head h2 {
+    font-size: 16px !important;
+}
+
+body.analytics-page .chart-tag {
+    font-size: 11px !important;
+    padding: 3px 9px !important;
+}
+
+body.analytics-page .analytics-charts--main .chart-canvas-wrap,
+body.analytics-page .analytics-charts--main .chart-canvas-wrap--balanced {
+    flex: 1 1 auto;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+}
+
+body.analytics-page .analytics-col--right .analytics-right-chart {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0 !important;
+    padding: 10px 12px !important;
+    overflow: hidden;
+}
+
+body.analytics-page .chart-canvas-wrap--right {
+    flex: 1;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+}
+
+body.analytics-page .analytics-col--right .analytics-insight {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px 12px !important;
+    text-align: center;
+}
+
+body.analytics-page .analytics-col--right .analytics-insight h2 {
+    font-size: 16px !important;
+    margin-bottom: 4px !important;
+}
+
+body.analytics-page .analytics-col--right .analytics-insight p {
+    font-size: 13px !important;
+    margin: 0;
+    line-height: 1.35;
+}
+
+body.analytics-page .analytics-footer-panel {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    text-align: center;
+}
+
+body.analytics-page .analytics-footer-panel p {
+    font-size: 13px !important;
+    margin: 0;
+}
+
+/* Override theme.css centered 1400px shell */
+body.analytics-page .analytics-shell {
+    padding-top: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+}
+
+body.analytics-page > .dashboard-navbar {
+    width: calc(100% - 24px) !important;
+    max-width: none !important;
+    margin: 8px auto 0 !important;
+}
+
+body.analytics-page .glass-card:hover {
+    transform: none;
+}
+
+body.analytics-page .analytics-build-tag {
+    position: fixed;
+    right: 10px;
+    bottom: 8px;
+    z-index: 9998;
+    padding: 4px 10px;
+    font-size: 10px;
+    pointer-events: none;
+}
+
+@media (max-width: 1100px) {
+    body.analytics-page {
+        overflow: auto;
+        max-height: none;
+    }
+
+    body.analytics-page .app-content {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+
+    body.analytics-page .page-container.analytics-shell {
+        overflow: visible;
+        max-height: none;
+    }
+
+    body.analytics-page .analytics-split {
+        grid-template-columns: 1fr !important;
+        overflow: visible;
+    }
+
+    body.analytics-page .analytics-col--left .analytics-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    body.analytics-page .analytics-charts--main {
+        grid-template-rows: auto;
+    }
+
+    body.analytics-page .analytics-charts--main .chart-canvas-wrap {
+        min-height: 220px !important;
+    }
+
+    body.analytics-page .chart-canvas-wrap--right {
+        min-height: 200px !important;
+    }
+}

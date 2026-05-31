@@ -1,0 +1,176 @@
+/* PWA + mobile layout */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pwa-standalone .dashboard-navbar,
+.pwa-standalone .app-shell > nav.dashboard-navbar {
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+
+/* Mobile nav */
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--text, #f1f5f9);
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .app-shell .dashboard-navbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 12px;
+    width: calc(100% - 16px) !important;
+    margin: 8px auto;
+  }
+
+  .navbar-start {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dashboard-logo {
+    font-size: 0.85rem !important;
+  }
+
+  .navbar-clock {
+    font-size: 0.75rem;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .app-shell .dashboard-navbar > ul,
+  .app-shell .dashboard-navbar .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 6px;
+    margin: 0;
+    padding: 8px 0 0;
+    list-style: none;
+  }
+
+  .app-shell .dashboard-navbar .nav-links--open {
+    display: flex;
+  }
+
+  .app-shell .dashboard-navbar li a,
+  .app-shell .dashboard-navbar .nav-links li a {
+    display: block;
+    padding: 12px 14px;
+    min-height: 44px;
+    border-radius: 10px;
+  }
+
+  .dash-build-tag,
+  .analytics-build-tag {
+    display: none;
+  }
+
+  .alert-hero {
+    padding-top: 100px !important;
+  }
+
+  .export-btn,
+  .sound-enable-btn,
+  .enter-btn,
+  .login-box button {
+    min-height: 48px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .alert-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .alert-table {
+    min-width: 520px;
+  }
+}
+
+/* Install app bar */
+.pwa-install-bar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 9999;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  transform: translateY(120%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+.pwa-install-bar--visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pwa-install-bar[hidden] {
+  display: none !important;
+}
+
+.pwa-install-bar__text {
+  flex: 1;
+  min-width: 140px;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.pwa-install-bar__text strong {
+  display: block;
+  color: #f1f5f9;
+  font-size: 0.95rem;
+}
+
+.pwa-install-btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #22d3ee, #38bdf8);
+  color: #020617;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pwa-install-dismiss {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}

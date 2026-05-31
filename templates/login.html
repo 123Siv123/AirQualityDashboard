@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Secure Access</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    {% include 'includes/pwa_head.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=14">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-pwa.css') }}?v=1">
+</head>
+
+<body>
+
+    <div class="login-page">
+
+        <div class="login-box">
+
+            <div class="login-badge">
+                ● AUTHENTICATION REQUIRED
+            </div>
+
+            <h1>SECURE ACCESS</h1>
+
+            <p>
+                Smart Environmental Monitoring Authentication
+            </p>
+
+            <form onsubmit="return validateLogin()">
+
+                <input type="text" id="username" placeholder="Enter Username" required>
+                <input type="password" id="password" placeholder="Enter Password" required>
+
+                <button type="submit" class="login-btn">LOGIN</button>
+
+            </form>
+
+            <div id="error-msg"></div>
+
+            <nav class="login-quick-nav" aria-label="Quick navigation">
+                <p>After login, or open directly:</p>
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('analytics') }}">Analytics</a>
+                <a href="{{ url_for('alerts') }}">Alerts</a>
+                <a href="{{ url_for('home') }}">← Back to Welcome</a>
+            </nav>
+
+        </div>
+
+    </div>
+
+    <script>
+        function validateLogin() {
+            var user = document.getElementById("username").value;
+            var pass = document.getElementById("password").value;
+
+            if (user === "admin" && pass === "1234") {
+                window.location.href = "{{ url_for('dashboard') }}";
+                return false;
+            }
+
+            document.getElementById("error-msg").innerHTML =
+                "Invalid Username or Password";
+            return false;
+        }
+    </script>
+
+    {% include 'includes/pwa_install_bar.html' %}
+    <script src="{{ url_for('static', filename='js/pwa-install.js') }}?v=1"></script>
+</body>
+
+</html>

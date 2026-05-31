@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Analytics Center | AQ Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    {% include 'includes/pwa_head.html' %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=16">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/analytics-layout.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-pwa.css') }}?v=1">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body class="app-shell analytics-page">
+
+    <div class="analytics-build-tag" id="analyticsBuildTag">Analytics Grid v5 · larger panels</div>
+
+    {% set active_page = 'analytics' %}
+    {% set logo_text = 'AQ ANALYTICS' %}
+    {% include 'includes/app_nav.html' %}
+
+    <div class="app-content">
+    <div class="page-container analytics-shell">
+
+        <div class="analytics-header-zone">
+            <div class="analytics-stream-bar glass-card">
+                <div class="stream-bar-left">
+                    <span class="analytics-live-pill pulse-live" id="analyticsLivePill">● LIVE</span>
+                    <span class="stream-label" id="streamLabel">LIVE SENSOR STREAM</span>
+                    <span class="stream-sub">Real-time analytics active</span>
+                </div>
+                <div class="stream-bar-right">
+                    <span class="stream-updated mono" id="lastUpdated">Updated just now</span>
+                    <span class="stream-clock mono" id="analyticsClock">--:--:--</span>
+                </div>
+            </div>
+
+            <header class="analytics-hero-modern">
+                <h1>Environmental Intelligence Center</h1>
+                <p>
+                    IoT sensor analytics · AQI status
+                    <strong id="heroAqi">--</strong>
+                </p>
+            </header>
+        </div>
+
+        <div class="analytics-split">
+
+            <div class="analytics-col analytics-col--left">
+                <section class="analytics-top-row">
+                    <div class="analytics-spectrum-panel glass-card">
+                        <div class="chart-card-head">
+                            <h2>🌐 Risk Spectrum</h2>
+                            <span class="chart-tag">Polar live</span>
+                        </div>
+                        <div class="chart-canvas-wrap chart-canvas-wrap--spectrum">
+                            <div class="chart-skeleton" aria-hidden="true"></div>
+                            <canvas id="riskSpectrumChart" style="opacity:0"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="analytics-kpi-grid">
+                        <div class="analytics-kpi glass-card">
+                            <span class="kpi-label">Avg Gas</span>
+                            <strong id="kpiAvgGas">--</strong>
+                            <span class="kpi-trend-mini stable" id="trendGas">■ Stable</span>
+                        </div>
+                        <div class="analytics-kpi glass-card">
+                            <span class="kpi-label">Peak Gas</span>
+                            <strong id="kpiPeakGas">--</strong>
+                            <small>session max</small>
+                        </div>
+                        <div class="analytics-kpi glass-card">
+                            <span class="kpi-label">Safe Duration</span>
+                            <strong id="kpiSafe">--</strong>
+                            <small>uptime ratio</small>
+                        </div>
+                        <div class="analytics-kpi glass-card">
+                            <span class="kpi-label">Alert Events</span>
+                            <strong id="kpiAlerts">--</strong>
+                            <small>logged</small>
+                        </div>
+                        <div class="analytics-kpi glass-card">
+                            <span class="kpi-label">Temperature</span>
+                            <strong id="kpiTemp">--</strong>
+                            <span class="kpi-trend-mini stable" id="trendTemp">■ Stable</span>
+                        </div>
+                        <div class="analytics-kpi glass-card">
+                            <span class="kpi-label">Humidity</span>
+                            <strong id="kpiHumidity">--</strong>
+                            <span class="kpi-trend-mini stable" id="trendHum">■ Stable</span>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="analytics-layout">
+                    <aside class="analytics-sidebar glass-card">
+                        <h3>Time Range</h3>
+                        <button type="button" class="filter-btn active" data-period="today">Today</button>
+                        <button type="button" class="filter-btn" data-period="weekly">Weekly</button>
+                        <button type="button" class="filter-btn" data-period="monthly">Monthly</button>
+
+                        <h3>AI Insights</h3>
+                        <ul class="insights-list" id="insightsList">
+                            <li>Loading environmental intelligence…</li>
+                        </ul>
+
+                        <div class="sidebar-stat">
+                            <span>History buffer</span>
+                            <strong id="historyPoints">0</strong>
+                            <small>sensor snapshots</small>
+                        </div>
+                    </aside>
+
+                    <main class="analytics-charts analytics-charts--main">
+                        <div class="chart-card chart-span-6 glass-card">
+                            <div class="chart-card-head">
+                                <h2>📈 Live Gas Trend</h2>
+                                <span class="chart-tag live-tag">● Streaming</span>
+                            </div>
+                            <div class="chart-canvas-wrap">
+                                <div class="chart-skeleton" aria-hidden="true"></div>
+                                <canvas id="gasTrendChart" style="opacity:0"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card chart-span-6 glass-card">
+                            <div class="chart-card-head">
+                                <h2>🥧 AQI Distribution</h2>
+                                <span class="chart-tag">From history</span>
+                            </div>
+                            <div class="chart-canvas-wrap chart-canvas-wrap--balanced">
+                                <div class="chart-skeleton" aria-hidden="true"></div>
+                                <canvas id="distributionChart" style="opacity:0"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card chart-span-6 glass-card">
+                            <div class="chart-card-head">
+                                <h2>🌡 Temperature Analysis</h2>
+                                <span class="chart-tag">Dual axis</span>
+                            </div>
+                            <div class="chart-canvas-wrap">
+                                <div class="chart-skeleton" aria-hidden="true"></div>
+                                <canvas id="climateChart" style="opacity:0"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card chart-span-6 glass-card">
+                            <div class="chart-card-head">
+                                <h2>📊 Weekly AQI Index</h2>
+                                <span class="chart-tag">Severity colors</span>
+                            </div>
+                            <div class="chart-canvas-wrap">
+                                <div class="chart-skeleton" aria-hidden="true"></div>
+                                <canvas id="indexBarChart" style="opacity:0"></canvas>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+
+            <aside class="analytics-col analytics-col--right">
+                <div class="chart-card glass-card analytics-right-chart">
+                    <div class="chart-card-head">
+                        <h2>🔥 Pollution Hours</h2>
+                        <span class="chart-tag">Radar</span>
+                    </div>
+                    <div class="chart-canvas-wrap chart-canvas-wrap--right">
+                        <div class="chart-skeleton" aria-hidden="true"></div>
+                        <canvas id="pollutionRadarChart" style="opacity:0"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card glass-card analytics-right-chart">
+                    <div class="chart-card-head">
+                        <h2>🚨 Alert Severity Mix</h2>
+                        <span class="chart-tag">Live distribution</span>
+                    </div>
+                    <div class="chart-canvas-wrap chart-canvas-wrap--right">
+                        <div class="chart-skeleton" aria-hidden="true"></div>
+                        <canvas id="alertMixChart" style="opacity:0"></canvas>
+                    </div>
+                </div>
+
+                <section class="analytics-insight" id="analyticsInsight">
+                    <h2 id="insightTitle">🟢 SAFE — Real-time analytics active</h2>
+                    <p id="insightMessage">Monitoring live sensor stream for anomalies.</p>
+                </section>
+
+                <footer class="app-footer analytics-footer-panel">
+                    <p><strong>AQ Monitor</strong> © 2026 · Live Analytics v2 · Industrial IoT Platform</p>
+                </footer>
+            </aside>
+
+        </div>
+
+    </div>
+    </div>
+
+    <script id="analyticsData" type="application/json">{{ analytics_json|safe }}</script>
+    <script src="{{ url_for('static', filename='js/analytics-live.js') }}?v=8"></script>
+    <script>
+        (function () {
+            var initial = {};
+            try {
+                initial = JSON.parse(document.getElementById("analyticsData").textContent);
+            } catch (e) {
+                initial = {};
+            }
+
+            function tickClock() {
+                var el = document.getElementById("analyticsClock");
+                if (el) {
+                    el.textContent = new Date().toLocaleTimeString();
+                }
+            }
+            tickClock();
+            setInterval(tickClock, 1000);
+
+            if (window.AQAnalytics) {
+                window.AQAnalytics.start(initial);
+            }
+        })();
+    </script>
+
+    {% include 'includes/pwa_install_bar.html' %}
+    <script src="{{ url_for('static', filename='js/pwa-install.js') }}?v=1"></script>
+</body>
+
+</html>
